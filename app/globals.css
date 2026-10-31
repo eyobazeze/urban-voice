@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/bricolage-grotesque";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Inter Variable", ui-sans-serif, sans-serif;
+
+  --color-brand: #249a00;
+  --color-brand-deep: #1a7400;
+  --color-brand-tint: #eaf6e5;
+  --color-ink: #1c2230;
+  --color-muted: #6d717f;
+  --color-line: #e6e8ee;
+  --color-canvas: #f6f7f4;
+  --color-surface: #ffffff;
+  --color-map-blue: #0088e8;
+
+  --color-cat-roads: #d9480f;
+  --color-cat-lighting: #e0a100;
+  --color-cat-waste: #5b8c2a;
+  --color-cat-transport: #0088e8;
+  --color-cat-parks: #12905f;
+  --color-cat-safety: #c2255c;
+
+  --shadow-float: 0 8px 28px -8px rgb(28 34 48 / 0.28), 0 2px 6px rgb(28 34 48 / 0.08);
+  --shadow-card: 0 1px 2px rgb(28 34 48 / 0.06);
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* Leaflet pins */
+.uv-pin { background: none; border: 0; }
+.uv-pin span {
+  display: grid; place-items: center; width: 34px; height: 34px;
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  border: 3px solid #fff; box-shadow: 0 4px 10px rgb(0 0 0 / 0.3);
+  transition: transform .15s ease;
+}
+.uv-pin span i { transform: rotate(45deg); width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+.uv-pin.is-active span { transform: rotate(-45deg) scale(1.25); }
+.uv-me {
+  width: 16px; height: 16px; border-radius: 50%; background: var(--color-map-blue);
+  border: 3px solid #fff; box-shadow: 0 0 0 8px rgb(0 136 232 / 0.18);
+}
+.leaflet-container { font-family: var(--font-sans); background: #e9eef0; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* Mobile: pinch to zoom, keep the OSM credit visible above the collapsed sheet */
+@media (max-width: 1023px) {
+  .uv-home-map .leaflet-control-zoom { display: none; }
+  .uv-home-map .leaflet-bottom { bottom: 132px; }
+}
