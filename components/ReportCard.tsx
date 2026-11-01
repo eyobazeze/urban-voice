@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Heart, MessageCircle, Share2, MapPin, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { Heart, MessageCircle, MapPin, ArrowRight } from "lucide-react";
 import type { Report } from "@/lib/types";
 import { categoryById } from "@/lib/categories";
 import { compact } from "@/lib/format";
@@ -8,12 +9,15 @@ import { Avatar } from "./ui/Avatar";
 import { useEngagement } from "@/lib/engagement";
 import { StatusBadge } from "./ui/StatusBadge";
 import { TimeAgo } from "./ui/TimeAgo";
+import { QuickComment } from "./QuickComment";
+import { ShareButton } from "./ShareButton";
 
 export function ReportCard({
   report, active, onSelect,
 }: { report: Report; active?: boolean; onSelect?: (id: string) => void }) {
   const cat = categoryById(report.category);
   const { liked, likes, comments, toggleLike } = useEngagement(report);
+  const [commenting, setCommenting] = useState(false);
 
   return (
     <article
@@ -53,14 +57,23 @@ export function ReportCard({
         >
           <Heart size={18} fill={liked ? "currentColor" : "none"} aria-hidden /> {compact(likes)}
         </button>
-        <span className="inline-flex items-center gap-1.5"><MessageCircle size={18} aria-hidden /> {compact(comments)}</span>
-        <span className="inline-flex items-center gap-1.5"><Share2 size={18} aria-hidden /> {compact(report.shares)}</span>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setCommenting((v) => !v); }}
+          aria-expanded={commenting}
+          aria-label={`Comment, ${comments} comments`}
+          className={`inline-flex items-center gap-1.5 ${commenting ? "font-medium text-brand-deep" : "hover:text-ink"}`}
+        >
+          <MessageCircle size={18} aria-hidden /> {compact(comments)}
+        </button>
+        <ShareButton report={report} count={report.shares} className="inline-flex items-center gap-1.5 hover:text-ink" />
         {active && (
           <Link href={`/reports/${report.id}`} onClick={(e) => e.stopPropagation()} className="ml-auto inline-flex items-center gap-1 font-semibold text-brand-deep hover:underline">
             View report <ArrowRight size={15} aria-hidden />
           </Link>
         )}
       </footer>
+      {commenting && <QuickComment report={report} onClose={() => setCommenting(false)} />}
     </article>
   );
 }

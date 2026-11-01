@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ArrowLeft, Check, Heart, Map as MapIcon, MapPin, MessageCircle, Share2, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Check, Heart, Map as MapIcon, MapPin, MessageCircle, Trash2 } from "lucide-react";
 import type { Comment, Report, ReportStatus } from "@/lib/types";
 import { categoryById, STATUS, STATUS_STEPS } from "@/lib/categories";
 import { compact } from "@/lib/format";
@@ -13,6 +13,7 @@ import { Avatar } from "./ui/Avatar";
 import { StatusBadge } from "./ui/StatusBadge";
 import { TimeAgo } from "./ui/TimeAgo";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ShareButton } from "./ShareButton";
 import MiniMap from "./MiniMapLoader";
 
 const NOTE: Record<ReportStatus, { mine: string; other: string }> = {
@@ -33,6 +34,20 @@ export function ReportDetail({ report, initialComments }: { report: Report; init
   const { liked, likes, comments: commentCount, toggleLike } = useEngagement(report);
   const thread = useComments(report, initialComments);
   const [draft, setDraft] = useState("");
+  const commentInput = useRef<HTMLInputElement>(null);
+  const focusComment = () => {
+    commentInput.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    commentInput.current?.focus({ preventScroll: true });
+  };
+  // Arriving from a comment link (…/reports/id#comment) puts the cursor in the comment box
+  useEffect(() => {
+    if (window.location.hash !== "#comment") return;
+    const t = setTimeout(() => {
+      commentInput.current?.scrollIntoView({ block: "center" });
+      commentInput.current?.focus({ preventScroll: true });
+    }, 200);
+    return () => clearTimeout(t);
+  }, []);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -160,8 +175,10 @@ export function ReportDetail({ report, initialComments }: { report: Report; init
           className={`${pill} ${liked ? "border-rose-200 bg-rose-50 text-rose-700" : "border-line bg-surface hover:bg-slate-50"}`}>
           <Heart size={17} fill={liked ? "currentColor" : "none"} aria-hidden /> {compact(likes)}
         </button>
-        <span className={`${pill} border-line bg-surface`}><MessageCircle size={17} aria-hidden /> {compact(commentCount)}</span>
-        <span className={`${pill} border-line bg-surface`}><Share2 size={17} aria-hidden /> {compact(report.shares)}</span>
+        <button type="button" onClick={focusComment} aria-label={`Comment, ${commentCount} comments`} className={`${pill} border-line bg-surface hover:bg-slate-50`}>
+          <MessageCircle size={17} aria-hidden /> {compact(commentCount)}
+        </button>
+        <ShareButton report={report} count={report.shares} iconSize={17} className={`${pill} border-line bg-surface hover:bg-slate-50`} />
       </div>
 
       <section aria-label="Comments" className="rounded-3xl border border-line bg-surface p-5 lg:p-6">
@@ -190,7 +207,7 @@ export function ReportDetail({ report, initialComments }: { report: Report; init
         <form onSubmit={post} className="mt-4 flex gap-2">
           <label className="min-w-0 flex-1">
             <span className="sr-only">Add a comment</span>
-            <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a comment" maxLength={1000}
+            <input ref={commentInput} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a comment" maxLength={1000}
               className="h-11 w-full rounded-full border border-line bg-surface px-4 text-[15px] placeholder:text-muted focus:border-brand focus:outline-none" />
           </label>
           <button type="submit" disabled={!draft.trim() || thread.busy} className="rounded-full bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-deep disabled:opacity-40">
