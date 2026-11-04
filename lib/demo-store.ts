@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useSyncExternalStore } from "react";
-import type { Comment, Report } from "./types";
+import type { Comment, HistoryEntry, Report, ReportStatus } from "./types";
 import type { Settings } from "./profile-types";
 
 // Demo mode only: reports a visitor files (and sample reports they delete) are kept in
@@ -68,6 +68,47 @@ export function deleteDemoComment(reportId: string, commentId: string) {
   commentsStore.set({ ...all, [reportId]: (all[reportId] ?? []).filter((c) => c.id !== commentId) });
 }
 
+export interface DemoStatusEntry {
+  status?: ReportStatus;
+  assigneeId?: string | null;
+  assignee?: string | null;
+  resolvedAt?: string | null;
+  history: HistoryEntry[];
+}
+const NO_STATUS: Record<string, DemoStatusEntry> = {};
+const statusStore = createStore<Record<string, DemoStatusEntry>>("uv-demo-status", NO_STATUS);
+
+export const useDemoStatus = () => statusStore.use();
+
+/** A report as the staff portal last left it (demo mode). */
+export function applyDemoStatus(r: Report, o?: DemoStatusEntry): Report {
+  if (!o) return r;
+  return {
+    ...r,
+    status: o.status ?? r.status,
+    assigneeId: o.assigneeId === undefined ? r.assigneeId : (o.assigneeId ?? undefined),
+    assignee: o.assignee === undefined ? r.assignee : (o.assignee ?? undefined),
+    resolvedAt: o.resolvedAt === undefined ? r.resolvedAt : (o.resolvedAt ?? undefined),
+  };
+}
+
+export function demoSetStatus(report: Report, status: ReportStatus, note: string, staffName: string) {
+  const all = statusStore.getSnapshot();
+  const cur = all[report.id] ?? { history: [] };
+  const now = new Date().toISOString();
+  const entry: HistoryEntry = { id: `demo-h-${Date.now().toString(36)}`, status, note: note.trim() || undefined, by: staffName, createdAt: now };
+  statusStore.set({
+    ...all,
+    [report.id]: { ...cur, status, resolvedAt: status === "resolved" ? now : null, history: [...cur.history, entry] },
+  });
+}
+
+export function demoAssign(report: Report, staff: { id: string; name: string } | null) {
+  const all = statusStore.getSnapshot();
+  const cur = all[report.id] ?? { history: [] };
+  statusStore.set({ ...all, [report.id]: { ...cur, assigneeId: staff?.id ?? null, assignee: staff?.name ?? null } });
+}
+
 export interface DemoProfile { name?: string; handle?: string; settings?: Settings }
 const EMPTY_PROFILE: DemoProfile = {};
 const profileStore = createStore<DemoProfile>("uv-demo-profile", EMPTY_PROFILE);
@@ -83,6 +124,7 @@ export function resetDemoData() {
   profileStore.reset();
   likesStore.reset();
   commentsStore.reset();
+  statusStore.reset();
 }
 
 export const useDemoReports = () => reportsStore.use();
@@ -103,15 +145,17 @@ export function useMergedReports(server: Report[]): Report[] {
   const demo = reportsStore.use();
   const hidden = hiddenStore.use();
   const profile = profileStore.use();
+  const overlay = statusStore.use();
   return useMemo(
     () =>
       [...demo, ...server]
         .filter((r) => !hidden.includes(r.id))
+        .map((r) => applyDemoStatus(r, overlay[r.id]))
         // A renamed demo profile shows on the reports it owns
         .map((r) => (r.mine && (profile.name || profile.handle)
           ? { ...r, author: { ...r.author, name: profile.name || r.author.name, handle: profile.handle || r.author.handle } }
           : r)),
-    [demo, server, hidden, profile],
+    [demo, server, hidden, profile, overlay],
   );
 }
 

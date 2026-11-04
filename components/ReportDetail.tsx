@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, Heart, Map as MapIcon, MapPin, MessageCircle, Trash2 } from "lucide-react";
-import type { Comment, Report, ReportStatus } from "@/lib/types";
+import type { Comment, HistoryEntry, Report, ReportStatus } from "@/lib/types";
 import { categoryById, STATUS, STATUS_STEPS } from "@/lib/categories";
 import { compact } from "@/lib/format";
 import { deleteReport } from "@/lib/reports-api";
 import { useComments, useEngagement } from "@/lib/engagement";
-import { useDemoProfile, useHiddenIds } from "@/lib/demo-store";
+import { applyDemoStatus, useDemoProfile, useDemoStatus, useHiddenIds } from "@/lib/demo-store";
 import { Avatar } from "./ui/Avatar";
 import { StatusBadge } from "./ui/StatusBadge";
 import { TimeAgo } from "./ui/TimeAgo";
@@ -25,8 +25,12 @@ const NOTE: Record<ReportStatus, { mine: string; other: string }> = {
 
 const pill = "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors";
 
-export function ReportDetail({ report, initialComments }: { report: Report; initialComments: Comment[] }) {
+export function ReportDetail({ report: base, initialComments, history: serverHistory = [] }: { report: Report; initialComments: Comment[]; history?: HistoryEntry[] }) {
   const router = useRouter();
+  // In demo mode, status changes made in the staff portal are kept in this browser
+  const overlay = useDemoStatus()[base.id];
+  const report = useMemo(() => applyDemoStatus(base, overlay), [base, overlay]);
+  const updates = useMemo(() => [...serverHistory, ...(overlay?.history ?? [])].reverse(), [serverHistory, overlay]);
   const cat = categoryById(report.category);
   const deleted = useHiddenIds().includes(report.id);
   const demoProfile = useDemoProfile();
@@ -144,6 +148,24 @@ export function ReportDetail({ report, initialComments }: { report: Report; init
           {report.mine ? NOTE[report.status].mine : NOTE[report.status].other}
         </p>
       </section>
+
+      {updates.length > 0 && (
+        <section aria-label="Updates from the city" className="rounded-3xl border border-line bg-surface p-5 lg:p-6">
+          <h2 className="text-sm font-semibold">Updates from the city</h2>
+          <ol className="mt-4 space-y-4">
+            {updates.map((u) => (
+              <li key={u.id} className="flex gap-3">
+                <span aria-hidden className="mt-1.5 size-2.5 shrink-0 rounded-full bg-brand" />
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold">{STATUS[u.status].label}</p>
+                  {u.note && <p className="mt-0.5 leading-relaxed">{u.note}</p>}
+                  <p className="mt-0.5 text-xs text-muted">City team · <TimeAgo iso={u.createdAt} /></p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <section className="space-y-4 rounded-3xl border border-line bg-surface p-5 lg:p-6" aria-label="Details">
         {report.body && <p className="text-[15px] leading-relaxed">{report.body}</p>}

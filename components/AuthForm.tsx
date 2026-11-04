@@ -10,9 +10,10 @@ const input =
   "h-12 w-full rounded-xl border bg-surface px-4 text-[15px] placeholder:text-muted focus:border-brand focus:outline-none";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; next?: string; notice?: string }) {
+export function AuthForm({ mode, next, notice, portal = "citizen" }: { mode: "login" | "signup"; next?: string; notice?: string; portal?: "citizen" | "gov" }) {
   const router = useRouter();
-  const signup = mode === "signup";
+  const gov = portal === "gov";
+  const signup = mode === "signup" && !gov;
   const demo = !isSupabaseConfigured();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,7 +29,7 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; nex
     password: password.length >= 8 ? null : "Use at least 8 characters",
   };
   const shown = (k: keyof typeof problems) => (attempted ? problems[k] : null);
-  const target = safeNext(next);
+  const target = gov ? (safeNext(next).startsWith("/gov") ? safeNext(next) : "/gov") : safeNext(next);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,8 +63,17 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; nex
       }
       const { error: err } = await supabase.auth.signInWithPassword({ email: addr, password });
       if (err) {
-        if (/not confirmed/i.test(err.message)) { router.push(`/verify?email=${encodeURIComponent(addr)}`); return; }
+        if (/not confirmed/i.test(err.message)) { router.push(`${gov ? "/gov" : ""}/verify?email=${encodeURIComponent(addr)}`); return; }
         throw err;
+      }
+      if (gov) {
+        const { data: who } = await supabase.auth.getUser();
+        const { data: row } = await supabase.from("profiles").select("role").eq("id", who.user?.id ?? "").maybeSingle();
+        if (row?.role !== "gov") {
+          setError("This account doesn't have staff access. Ask an administrator to enable it, or use the citizen site.");
+          setBusy(false);
+          return;
+        }
       }
       router.push(target);
       router.refresh();
@@ -79,15 +89,15 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; nex
 
   return (
     <div className="w-full max-w-md">
-      <h1 className="font-display text-3xl font-bold">{signup ? "Create your account" : "Welcome back"}</h1>
+      <h1 className="font-display text-3xl font-bold">{signup ? "Create your account" : gov ? "Staff sign in" : "Welcome back"}</h1>
       <p className="mt-2 text-muted">
-        {signup ? "Report problems, follow their progress, and see your city respond." : "Sign in to follow your reports and join the discussion."}
+        {signup ? "Report problems, follow their progress, and see your city respond." : gov ? "Sign in to review, assign and resolve citizen complaints." : "Sign in to follow your reports and join the discussion."}
       </p>
 
       {demo && (
         <p className="mt-5 flex gap-2.5 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900">
           <Info size={18} aria-hidden className="mt-0.5 shrink-0" />
-          <span>Demo mode: the backend isn&rsquo;t connected, so any details work and nothing is stored. You&rsquo;ll browse as the sample citizen.</span>
+          <span>{gov ? "Demo mode: the backend isn\u2019t connected, so any details work. You\u2019ll enter the portal as a sample staff member." : "Demo mode: the backend isn\u2019t connected, so any details work and nothing is stored. You\u2019ll browse as the sample citizen."}</span>
         </p>
       )}
       {notice && <p role="alert" className="mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{notice}</p>}
@@ -130,12 +140,19 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; nex
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted">
-        {signup ? "Already have an account? " : "New to UrbanVoice? "}
-        <Link href={`${signup ? "/login" : "/signup"}${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-brand-deep hover:underline">
-          {signup ? "Sign in" : "Create an account"}
-        </Link>
-      </p>
+      {gov ? (
+        <p className="mt-6 text-center text-sm text-muted">
+          Staff accounts are created by an administrator. Not staff?{" "}
+          <Link href="/" className="font-semibold text-brand-deep hover:underline">Go to the citizen site</Link>
+        </p>
+      ) : (
+        <p className="mt-6 text-center text-sm text-muted">
+          {signup ? "Already have an account? " : "New to UrbanVoice? "}
+          <Link href={`${signup ? "/login" : "/signup"}${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-brand-deep hover:underline">
+            {signup ? "Sign in" : "Create an account"}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

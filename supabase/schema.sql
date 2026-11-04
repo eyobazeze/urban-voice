@@ -155,3 +155,26 @@ create policy "photos upload own folder" on storage.objects for insert to authen
 
 -- Already ran an earlier version of this file? This adds the new profile settings column (safe to run again).
 alter table profiles add column if not exists settings jsonb not null default '{}'::jsonb;
+
+-- Staff: change a report's status (and add a note) in one step. The existing trigger records the change
+-- and notifies the citizen; this function attaches the note to that history entry.
+create or replace function gov_set_status(p_report uuid, p_status report_status, p_note text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare cur report_status;
+begin
+  if not is_gov() then raise exception 'not allowed'; end if;
+  select status into cur from reports where id = p_report for update;
+  if cur is null then raise exception 'report not found'; end if;
+  if cur is distinct from p_status then
+    update reports set status = p_status where id = p_report;
+    update status_history set note = nullif(btrim(p_note), '')
+      where id = (select max(id) from status_history where report_id = p_report);
+  elsif nullif(btrim(p_note), '') is not null then
+    insert into status_history (report_id, changed_by, from_status, to_status, note)
+    values (p_report, auth.uid(), cur, cur, btrim(p_note));
+  end if;
+end $$;
+grant execute on function gov_set_status(uuid, report_status, text) to authenticated;
+
+-- To make someone staff (run in the SQL Editor, replacing the email):
+-- update profiles set role = 'gov' where id = (select id from auth.users where email = 'staff@example.com');

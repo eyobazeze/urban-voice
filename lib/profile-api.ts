@@ -33,3 +33,11 @@ export async function changePassword(password: string): Promise<void> {
     throw new Error("Your password couldn't be changed. Please try again.");
   }
 }
+
+/** Staff: change only the display name. */
+export async function saveName(name: string): Promise<void> {
+  const { supabase, user } = await currentUser();
+  const { error } = await supabase.from("profiles").update({ full_name: name }).eq("id", user.id);
+  if (error) throw new Error("Your name couldn't be saved. Please try again.");
+  await supabase.auth.updateUser({ data: { full_name: name } });
+}

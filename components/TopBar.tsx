@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LogIn, LogOut, MapPinned, Plus, Settings, User } from "lucide-react";
+import { Building2, ChevronDown, LogIn, LogOut, MapPinned, Plus, Settings, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 
@@ -94,7 +94,10 @@ export function TopBar() {
                 {auth.status === "in" ? (
                   <button role="menuitem" onClick={signOut} className={item}><LogOut size={16} aria-hidden /> Sign out</button>
                 ) : (
-                  <Link role="menuitem" href="/login" onClick={() => setOpen(false)} className={item}><LogIn size={16} aria-hidden /> Sign in screens</Link>
+                  <>
+                    <Link role="menuitem" href="/login" onClick={() => setOpen(false)} className={item}><LogIn size={16} aria-hidden /> Sign in screens</Link>
+                    <Link role="menuitem" href="/gov" onClick={() => setOpen(false)} className={item}><Building2 size={16} aria-hidden /> Staff portal (demo)</Link>
+                  </>
                 )}
               </div>
             )}

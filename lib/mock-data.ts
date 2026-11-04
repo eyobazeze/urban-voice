@@ -1,4 +1,4 @@
-import type { Comment, Report } from "./types";
+import type { CategoryId, Comment, Report, ReportStatus } from "./types";
 
 const ago = (hours: number) => new Date(Date.now() - hours * 3600_000).toISOString();
 
@@ -89,8 +89,78 @@ const rawReports = (): Omit<Report, "mine">[] => [
   },
 ];
 
+const HOUR = 3600_000;
+const STAFF_NAMES = ["Alemu Kebede", "Dawit Tadesse", "Ruth Alem", "Samuel Mola"];
+
+// Who is working on the hand-written sample reports above
+const ASSIGNED: Record<string, string> = { r1: "Alemu Kebede", r3: "Samuel Mola", r5: "Ruth Alem", r6: "Ruth Alem", r8: "Dawit Tadesse" };
+const RESOLVED_AFTER_HOURS: Record<string, number> = { r5: 22 };
+
+const AREAS = [
+  { name: "Bole", spot: "Bole Medhanialem", lat: 8.9969, lng: 38.7867 },
+  { name: "Kirkos", spot: "Kazanchis Junction", lat: 9.0163, lng: 38.7694 },
+  { name: "Yeka", spot: "Megenagna", lat: 9.0204, lng: 38.8012 },
+  { name: "Arada", spot: "Piassa", lat: 9.0353, lng: 38.7503 },
+  { name: "Addis Ketema", spot: "Merkato Terminal", lat: 9.0305, lng: 38.7352 },
+  { name: "Lideta", spot: "Mexico Square", lat: 9.0108, lng: 38.7428 },
+  { name: "Nifas Silk-Lafto", spot: "Sar Bet", lat: 8.9957, lng: 38.7506 },
+  { name: "Kolfe Keranio", spot: "Kolfe Junction", lat: 9.0152, lng: 38.7075 },
+  { name: "Gulele", spot: "Gulele Market", lat: 9.0482, lng: 38.7479 },
+  { name: "Akaki Kality", spot: "Kality Roundabout", lat: 8.9502, lng: 38.7601 },
+];
+const TITLES: Record<CategoryId, string[]> = {
+  roads: ["Pothole damaging cars at", "Road surface collapsing near", "Blocked drain flooding the road at"],
+  lighting: ["Streetlights out along", "Dark stretch with broken lamps at", "Faulty traffic signal at"],
+  waste: ["Overflowing bins at", "Uncollected rubbish near", "Illegal dumping beside"],
+  transport: ["Damaged bus shelter at", "Missing route sign at", "Minibus queue blocking the road at"],
+  parks: ["Broken benches in", "Overgrown grass and litter at", "Damaged playground near"],
+  safety: ["Open manhole near", "Exposed cables beside", "Unsafe crossing at"],
+};
+const CATEGORY_IDS = Object.keys(TITLES) as CategoryId[];
+const NEIGHBOURS = ["Tigist Ayele", "Samuel Desta", "Betty Kassa", "Henok Abate", "Liya Mengistu", "Kidus Alemayehu", "Mulu Bekele", "Rediet Tesfaye", "Nahom Girma", "Saron Wolde"];
+
+// Twelve weeks of older reports so the staff dashboards have something to chart.
+// Generated from a fixed seed, so the numbers are the same every time.
+function olderReports(): Omit<Report, "mine">[] {
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const pick = <T,>(list: T[]) => list[Math.floor(rnd() * list.length)];
+  const out: Omit<Report, "mine">[] = [];
+  for (let i = 1; i <= 38; i++) {
+    const category = pick(CATEGORY_IDS);
+    const area = pick(AREAS);
+    const daysAgo = 4 + rnd() * 80;
+    const resolves = rnd() < (daysAgo > 14 ? 0.9 : 0.4);
+    const takes = Math.min(daysAgo * 0.7, 1 + rnd() * 13 + (category === "roads" ? 4 : 0));
+    const status: ReportStatus = resolves ? "resolved" : pick<ReportStatus>(daysAgo > 10 ? ["in_progress", "in_progress", "in_review"] : ["submitted", "in_review", "in_progress"]);
+    const name = pick(NEIGHBOURS);
+    const createdAt = new Date(Date.now() - daysAgo * 24 * HOUR).toISOString();
+    out.push({
+      id: `h${i}`, category, status,
+      title: `${pick(TITLES[category])} ${area.spot}`,
+      body: "Reported by a resident. Please send a crew to take a look.",
+      address: `${area.spot}, ${area.name}`,
+      lat: area.lat + (rnd() - 0.5) * 0.012, lng: area.lng + (rnd() - 0.5) * 0.012,
+      author: { name, handle: name.toLowerCase().replace(/\s+/g, ".") },
+      createdAt,
+      resolvedAt: resolves ? new Date(Date.now() - (daysAgo - takes) * 24 * HOUR).toISOString() : undefined,
+      assignee: status === "submitted" ? undefined : pick(STAFF_NAMES),
+      likes: 3 + Math.floor(rnd() * 90), comments: Math.floor(rnd() * 14), shares: Math.floor(rnd() * 10),
+    });
+  }
+  return out;
+}
+
 export const getMockReports = (): Report[] =>
-  rawReports().map((r) => ({ ...r, mine: r.author.handle === DEMO_USER.handle }));
+  [...rawReports(), ...olderReports()].map((r) => {
+    const created = +new Date(r.createdAt);
+    return {
+      ...r,
+      mine: r.author.handle === DEMO_USER.handle,
+      assignee: r.assignee ?? ASSIGNED[r.id],
+      resolvedAt: r.resolvedAt ?? (RESOLVED_AFTER_HOURS[r.id] ? new Date(created + RESOLVED_AFTER_HOURS[r.id] * HOUR).toISOString() : undefined),
+    };
+  });
 
 // Addis Ababa city centre
 export const ADDIS_CENTER: [number, number] = [9.0192, 38.7525];

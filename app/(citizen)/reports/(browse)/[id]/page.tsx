@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { DemoReport } from "@/components/DemoReport";
 import { ReportDetail } from "@/components/ReportDetail";
-import { getComments, getReport } from "@/lib/data";
+import { getComments, getHistory, getReport } from "@/lib/data";
 
 export default function ReportPage({ params }: PageProps<"/reports/[id]">) {
   return (
@@ -19,6 +19,6 @@ async function ReportData({ params }: { params: Promise<{ id: string }> }) {
   if (id.startsWith("demo-")) return <DemoReport id={id} />;
   const report = await getReport(id);
   if (!report) notFound();
-  const comments = await getComments(id);
-  return <ReportDetail report={report} initialComments={comments} />;
+  const [comments, history] = await Promise.all([getComments(id), getHistory(id)]);
+  return <ReportDetail report={report} initialComments={comments} history={history} />;
 }

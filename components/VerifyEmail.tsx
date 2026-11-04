@@ -6,7 +6,8 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 const COOLDOWN = 30;
 
-export function VerifyEmail({ email }: { email: string }) {
+export function VerifyEmail({ email, portal = "citizen" }: { email: string; portal?: "citizen" | "gov" }) {
+  const gov = portal === "gov";
   const demo = !isSupabaseConfigured();
   const [wait, setWait] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -24,7 +25,7 @@ export function VerifyEmail({ email }: { email: string }) {
     setBusy(true);
     const { error } = await createClient().auth.resend({
       type: "signup", email,
-      options: { emailRedirectTo: `${location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${location.origin}/auth/callback${gov ? "?next=/gov" : ""}` },
     });
     setBusy(false);
     if (error) setMsg({ ok: false, text: "We couldn't send another email just now. Please wait a minute and try again." });
@@ -50,7 +51,7 @@ export function VerifyEmail({ email }: { email: string }) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         {demo && (
-          <Link href="/" className="inline-flex h-12 items-center justify-center rounded-full bg-brand px-6 text-[15px] font-semibold text-white hover:bg-brand-deep">
+          <Link href={gov ? "/gov" : "/"} className="inline-flex h-12 items-center justify-center rounded-full bg-brand px-6 text-[15px] font-semibold text-white hover:bg-brand-deep">
             Continue to the app
           </Link>
         )}
@@ -63,7 +64,7 @@ export function VerifyEmail({ email }: { email: string }) {
       {msg && <p role="status" className={`mt-3 text-sm ${msg.ok ? "text-brand-deep" : "text-rose-600"}`}>{msg.text}</p>}
 
       <p className="mt-8 text-sm text-muted">
-        Wrong address? <Link href="/signup" className="font-semibold text-brand-deep hover:underline">Start again</Link>
+        Wrong address? <Link href={gov ? "/gov/login" : "/signup"} className="font-semibold text-brand-deep hover:underline">Start again</Link>
       </p>
     </div>
   );
