@@ -17,6 +17,7 @@ UrbanVoice has two sides that share one database, so an action on one side shows
 **For residents**
 - Report a problem in under a minute: pick a category, drop a pin on the map, add up to three photos (compressed in the browser before upload).
 - Follow every report through four steps: Submitted, In review, In progress, Resolved. Notes from the city appear on the report.
+- **See what is near you.** After you share your location, the feed and map show reports within 1, 2 or 5 km of you, with the distance on each card. Your location stays in your browser and is never sent to a server.
 - Browse what neighbours are reporting on a map, like and comment on reports, share a link, and delete your own reports.
 - A profile with your reports and stats, and a settings page.
 
@@ -29,21 +30,20 @@ UrbanVoice has two sides that share one database, so an action on one side shows
 
 ## Screenshots
 
-| Staff dashboard | Staff complaint page |
+| Sign in | Staff dashboard |
 |---|---|
-| ![Staff dashboard](docs/screenshots/staff-dashboard.png) | ![Staff complaint page](docs/screenshots/staff-complaint.png) |
-| **A citizen sees the city's update** | **Performance** |
-| ![Citizen report page with the city's update](docs/screenshots/citizen-report.png) | ![Staff performance](docs/screenshots/staff-performance.png) |
-
-| Profile | On a phone |
-|---|---|
-| ![Citizen profile](docs/screenshots/citizen-profile.png) | <img src="docs/screenshots/citizen-mobile.png" width="260" alt="Reports list on a phone"> |
+| ![Sign in](docs/screenshots/auth-login.png) | ![Staff dashboard](docs/screenshots/staff-dashboard.png) |
+| **Staff complaint page** | **A citizen sees the city's update** |
+| ![Staff complaint page](docs/screenshots/staff-complaint.png) | ![Citizen report page with the city's update](docs/screenshots/citizen-report.png) |
+| **Performance** | **On a phone** |
+| ![Staff performance](docs/screenshots/staff-performance.png) | <img src="docs/screenshots/citizen-mobile.png" width="260" alt="Reports list on a phone"> |
 
 ## Design and engineering decisions
 
 - **Security lives in the database.** Access rules are Postgres row-level security policies (`supabase/schema.sql`), not just checks in the app. Citizens can only edit or delete their own reports. The staff role can only be granted from the Supabase SQL Editor, so nobody can promote themselves. Staff change statuses through one `security definer` function (`gov_set_status`) that checks the caller is staff and records the history.
+- **Location stays private.** "Near you" is worked out in the browser: the position is kept in local storage and compared with the reports there, so it never reaches a server. If someone is outside the area the reports cover, the app says so and shows everything instead of an empty feed.
 - **A real demo mode.** With no Supabase keys, the whole app runs on sample data, kept in the visitor's browser (reports, likes, comments, deletes, staff updates). That makes the project easy to try and review without any setup, and it let me build and test both sides before the backend existed.
-- **Built for free tiers.** Photos are resized to 1200px in the browser before upload. Maps use Leaflet with OpenStreetMap. Addresses come from the free Nominatim service. Charts are small hand-written SVG components rather than a charting library.
+- **Built for free tiers.** Photos are resized to 1200px in the browser before upload. Maps use Leaflet with a free CARTO basemap built on OpenStreetMap data. Addresses come from the free Nominatim service. Charts are small hand-written SVG components rather than a charting library.
 - **Modern Next.js.** App Router with Cache Components: pages stream, and live data sits behind `Suspense` boundaries. Session refresh and early redirects run in `proxy.ts`.
 - **Priority is derived, not stored.** An open complaint is high priority when 100 or more neighbours back it or it has waited a week. The rules are in one file (`lib/analytics.ts`) and are easy to change.
 - **Accessibility.** Keyboard-friendly controls, labelled form fields, status messages announced to screen readers, native dialogs, and reduced-motion support.
@@ -56,7 +56,7 @@ UrbanVoice has two sides that share one database, so an action on one side shows
 | Framework | Next.js 16 (App Router), React 19, TypeScript |
 | Styling | Tailwind CSS 4, Lucide icons |
 | Backend | Supabase: Postgres, Auth, Storage, row-level security |
-| Maps | Leaflet, OpenStreetMap tiles, Nominatim |
+| Maps | Leaflet, CARTO basemap on OpenStreetMap data, Nominatim |
 | Hosting | Vercel |
 
 ## Run it locally
@@ -131,4 +131,4 @@ proxy.ts         session refresh and route guards
 ## Credits
 
 - The interface started from the [Urban Feedback - Complaint Platform (Community)](https://www.figma.com/community/file/1539251016512130689) Figma Community file, then was adapted and extended, including all of the working behavior and the pages the design didn't cover.
-- Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
+- Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, basemap © [CARTO](https://carto.com/attributions).

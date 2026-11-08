@@ -15,7 +15,7 @@ import { TimeAgo } from "../ui/TimeAgo";
 import MiniMap from "../MiniMapLoader";
 import { Panel, PriorityPill, shortDate } from "./bits";
 
-const TONE: Record<ReportStatus, string> = { submitted: "#64748b", in_review: "#d97706", in_progress: "#0284c7", resolved: "#249a00" };
+const TONE: Record<ReportStatus, string> = { submitted: "#64748b", in_review: "#d97706", in_progress: "#0284c7", resolved: "#1b8500" };
 
 export function ComplaintDetail({ report: base, comments, history: serverHistory, staff, now }: {
   report: Report; comments: Comment[]; history: HistoryEntry[]; staff: Staff; now: number;

@@ -5,6 +5,8 @@ import type { Report, ReportStatus } from "@/lib/types";
 import { STATUS } from "@/lib/categories";
 import { ReportListItem } from "./ReportListItem";
 import { useMergedReports } from "@/lib/demo-store";
+import { refreshLocationIfAllowed, useNearbyReports } from "@/lib/nearby";
+import { NearbyBar } from "./NearbyBar";
 
 type Sort = "newest" | "liked";
 type Tab = "mine" | "community";
@@ -23,6 +25,10 @@ const COPY: Record<Tab, { hint: string; empty: string }> = {
 
 export function ReportsList({ reports: serverReports, activeId }: { reports: Report[]; activeId: string | null }) {
   const reports = useMergedReports(serverReports);
+  const mineList = useMemo(() => reports.filter((r) => r.mine), [reports]);
+  // The community tab only shows what is close to the person (once they have shared where they are)
+  const community = useNearbyReports(useMemo(() => reports.filter((r) => !r.mine), [reports]));
+  useEffect(() => { refreshLocationIfAllowed(); }, []);
   const activeReport = reports.find((r) => r.id === activeId);
   const [tab, setTab] = useState<Tab>(activeReport && !activeReport.mine ? "community" : "mine");
   const [prevActive, setPrevActive] = useState(activeId);
@@ -36,18 +42,14 @@ export function ReportsList({ reports: serverReports, activeId }: { reports: Rep
   const [status, setStatus] = useState<ReportStatus | "all">("all");
   const [sort, setSort] = useState<Sort>("newest");
 
-  const counts = useMemo(() => ({
-    mine: reports.filter((r) => r.mine).length,
-    community: reports.filter((r) => !r.mine).length,
-  }), [reports]);
+  const counts = { mine: mineList.length, community: community.list.length };
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return reports
-      .filter((r) => (tab === "mine" ? r.mine : !r.mine))
+    return (tab === "mine" ? mineList : community.list)
       .filter((r) => (status === "all" || r.status === status) && (!q || `${r.title} ${r.address} ${r.body}`.toLowerCase().includes(q)))
       .sort((a, b) => sort === "liked" ? b.likes - a.likes : +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [reports, tab, query, status, sort]);
+  }, [mineList, community.list, tab, query, status, sort]);
 
   // Bring the selected report into view (e.g. arriving from a map pin)
   useEffect(() => {
@@ -78,6 +80,7 @@ export function ReportsList({ reports: serverReports, activeId }: { reports: Rep
           ))}
         </div>
         <p className="text-sm text-muted">{COPY[tab].hint}</p>
+        {tab === "community" && <NearbyBar result={community} />}
 
         <div className="flex items-center gap-2">
           <label className="relative block min-w-0 flex-1">

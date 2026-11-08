@@ -8,7 +8,7 @@ import { areaOf, average, daysToResolve, formatDays, inLastDays, isOpen, weeklyS
 import { BarList, GroupedBars, Legend } from "./charts";
 import { Kpi, Panel } from "./bits";
 
-const BLUE = "#0088e8", GREEN = "#249a00";
+const BLUE = "#0088e8", GREEN = "#1b8500";
 
 export function GovPerformance({ reports: serverReports, now }: { reports: Report[]; now: number }) {
   const all = useMergedReports(serverReports);

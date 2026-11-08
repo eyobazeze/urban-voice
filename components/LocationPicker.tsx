@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { TILE_OPTIONS, TILE_URL } from "@/lib/map-tiles";
 import { ADDIS_CENTER } from "@/lib/mock-data";
 
 export type LatLng = [number, number];
@@ -9,7 +10,7 @@ export type LatLng = [number, number];
 const pin = () =>
   L.divIcon({
     className: "uv-pin is-active",
-    html: '<span style="background:#249a00"><i></i></span>',
+    html: '<span style="background:#1b8500"><i></i></span>',
     iconSize: [34, 34],
     iconAnchor: [17, 34],
   });
@@ -31,10 +32,7 @@ export default function LocationPicker({ value, onChange }: { value: LatLng | nu
   useEffect(() => {
     if (!el.current || map.current) return;
     const m = L.map(el.current, { zoomControl: true }).setView(ADDIS_CENTER, 13);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(m);
+    L.tileLayer(TILE_URL, TILE_OPTIONS).addTo(m);
     m.on("click", (e: L.LeafletMouseEvent) => {
       const p: LatLng = [e.latlng.lat, e.latlng.lng];
       if (marker.current) marker.current.setLatLng(e.latlng);

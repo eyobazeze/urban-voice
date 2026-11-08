@@ -41,7 +41,7 @@ export function GovMapOps({ reports: serverReports, now }: { reports: Report[]; 
     { label: "Open complaints", value: open.length, Icon: FolderOpen, ink: "#0b6fc2" },
     { label: "High priority", value: critical, Icon: AlertTriangle, ink: RED },
     { label: "In progress", value: all.filter((r) => r.status === "in_progress").length, Icon: Hourglass, ink: "#d97706" },
-    { label: "Resolved", value: all.filter((r) => r.status === "resolved").length, Icon: CheckCircle2, ink: "#249a00" },
+    { label: "Resolved", value: all.filter((r) => r.status === "resolved").length, Icon: CheckCircle2, ink: "#1b8500" },
   ];
 
   return (

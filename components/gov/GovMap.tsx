@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { TILE_OPTIONS, TILE_URL } from "@/lib/map-tiles";
 import type { Report } from "@/lib/types";
 import { ADDIS_CENTER } from "@/lib/mock-data";
 import { STATUS_COLOR, type AreaSummary } from "@/lib/map-colors";
@@ -20,9 +21,7 @@ export default function GovMap({ mode, areas, pins, selectedKey, onSelect }: {
   useEffect(() => {
     if (!el.current || map.current) return;
     const m = L.map(el.current, { zoomControl: false }).setView(ADDIS_CENTER, 12);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(m);
+    L.tileLayer(TILE_URL, TILE_OPTIONS).addTo(m);
     L.control.zoom({ position: "bottomright" }).addTo(m);
     m.on("click", () => select.current(null));
     layer.current = L.layerGroup().addTo(m);

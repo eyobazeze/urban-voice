@@ -14,12 +14,18 @@ export function CategoryChips({
             key={id}
             aria-pressed={on}
             onClick={() => onChange(on ? null : id)}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium shadow-card transition-colors ${
-              on ? "border-transparent text-white" : "border-line bg-surface text-ink hover:bg-slate-50"
+            className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full pl-1.5 pr-3.5 text-sm font-semibold shadow-card ring-1 transition-all ${
+              on ? "text-white ring-transparent" : "bg-surface text-ink ring-black/[0.06] hover:-translate-y-px hover:shadow-float"
             }`}
             style={on ? { background: color } : undefined}
           >
-            <Icon size={16} aria-hidden style={on ? undefined : { color }} /> {label}
+            <span
+              className="grid size-7 place-items-center rounded-full"
+              style={on ? { background: "rgb(255 255 255 / 0.22)" } : { background: `color-mix(in srgb, ${color} 14%, white)`, color }}
+            >
+              <Icon size={15} aria-hidden />
+            </span>
+            {label}
           </button>
         );
       })}

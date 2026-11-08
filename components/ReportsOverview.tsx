@@ -8,7 +8,7 @@ import { useMergedReports } from "@/lib/demo-store";
 import { TimeAgo } from "./ui/TimeAgo";
 
 const TONE: Record<ReportStatus, string> = {
-  submitted: "#64748b", in_review: "#d97706", in_progress: "#0284c7", resolved: "#249a00",
+  submitted: "#64748b", in_review: "#d97706", in_progress: "#0284c7", resolved: "#1b8500",
 };
 
 // Desktop right-hand panel when no report is open: a quick read on how your reports are doing.

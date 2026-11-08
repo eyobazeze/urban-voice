@@ -24,6 +24,7 @@ export interface Report {
   resolvedAt?: string; // ISO, when the city closed it
   assigneeId?: string; // staff member working on it
   assignee?: string;   // that staff member's name
+  distanceKm?: number; // set in the browser when the person has shared where they are
   likes: number;
   comments: number;
   shares: number;

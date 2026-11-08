@@ -6,13 +6,13 @@
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Bricolage Grotesque Variable", "Inter Variable", ui-sans-serif, sans-serif;
 
-  --color-brand: #249a00;
-  --color-brand-deep: #1a7400;
-  --color-brand-tint: #eaf6e5;
+  --color-brand: #1b8500;
+  --color-brand-deep: #0f5c00;
+  --color-brand-tint: #e8f5e1;
   --color-ink: #1c2230;
   --color-muted: #6d717f;
-  --color-line: #e6e8ee;
-  --color-canvas: #f6f7f4;
+  --color-line: #e4e8e0;
+  --color-canvas: #f4f6f2;
   --color-surface: #ffffff;
   --color-map-blue: #0088e8;
   --color-gov-canvas: #f3faef;
@@ -24,13 +24,13 @@
   --color-cat-parks: #12905f;
   --color-cat-safety: #c2255c;
 
-  --shadow-float: 0 8px 28px -8px rgb(28 34 48 / 0.28), 0 2px 6px rgb(28 34 48 / 0.08);
-  --shadow-card: 0 1px 2px rgb(28 34 48 / 0.06);
+  --shadow-float: 0 14px 34px -12px rgb(16 28 8 / 0.30), 0 3px 8px rgb(16 28 8 / 0.07);
+  --shadow-card: 0 1px 2px rgb(16 28 8 / 0.05), 0 6px 18px -8px rgb(16 28 8 / 0.08);
 }
 
 html, body { height: 100%; }
 body {
-  background: var(--color-canvas);
+  background: radial-gradient(900px 360px at 50% -120px, rgb(27 133 0 / 0.09), transparent 70%), var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -65,3 +65,11 @@ body {
   .uv-home-map .leaflet-control-zoom { display: none; }
   .uv-home-map .leaflet-bottom { bottom: 132px; }
 }
+
+/* Map controls: rounded, soft shadow, on-brand hover */
+.leaflet-bar { border: 0 !important; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-float) !important; }
+.leaflet-bar a { width: 40px !important; height: 40px !important; line-height: 40px !important; color: var(--color-ink) !important; border-bottom: 1px solid var(--color-line) !important; }
+.leaflet-bar a:last-child { border-bottom: 0 !important; }
+.leaflet-bar a:hover { background: var(--color-brand-tint) !important; color: var(--color-brand-deep) !important; }
+.leaflet-control-attribution { font-size: 10px; background: rgb(255 255 255 / 0.78) !important; border-radius: 8px 0 0 0; }
+.leaflet-control-attribution a { color: var(--color-muted) !important; }

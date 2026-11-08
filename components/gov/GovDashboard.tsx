@@ -12,7 +12,7 @@ import { Donut, Legend, LineChart } from "./charts";
 import { Kpi, Panel, shortDate } from "./bits";
 
 const BLUE = "#0088e8";
-const GREEN = "#249a00";
+const GREEN = "#1b8500";
 
 export function GovDashboard({ reports: serverReports, staff, now }: { reports: Report[]; staff: Staff; now: number }) {
   const all = useMergedReports(serverReports);

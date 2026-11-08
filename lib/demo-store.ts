@@ -5,7 +5,7 @@ import type { Settings } from "./profile-types";
 
 // Demo mode only: reports a visitor files (and sample reports they delete) are kept in
 // this browser so the whole flow can be tried before Supabase is connected.
-function createStore<T>(key: string, empty: T) {
+export function createStore<T>(key: string, empty: T) {
   const event = `${key}-changed`;
   let cacheRaw: string | null = null;
   let cacheValue: T = empty;

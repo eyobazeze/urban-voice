@@ -39,17 +39,17 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-[1100] hidden h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-line bg-surface/95 px-6 backdrop-blur lg:grid">
       <Link href="/" className="flex items-center gap-2.5 justify-self-start font-display text-xl font-bold">
-        <span className="grid size-9 place-items-center rounded-xl bg-brand text-white"><MapPinned size={19} aria-hidden /></span>
+        <span className="grid size-9 place-items-center rounded-xl bg-brand text-white shadow-card"><MapPinned size={19} aria-hidden /></span>
         UrbanVoice
       </Link>
 
-      <nav aria-label="Main" className="flex gap-1">
+      <nav aria-label="Main" className="flex gap-1 rounded-full bg-slate-100/80 p-1">
         {LINKS.map(({ href, label, active }) => (
           <Link
             key={href} href={href}
             aria-current={active(path) ? "page" : undefined}
-            className={`rounded-full px-4 py-2 text-[15px] font-medium transition-colors ${
-              active(path) ? "bg-brand-tint text-brand-deep" : "text-ink hover:bg-slate-100"
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${
+              active(path) ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink"
             }`}
           >
             {label}

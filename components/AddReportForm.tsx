@@ -28,7 +28,20 @@ async function lookupAddress(p: LatLng, signal: AbortSignal): Promise<string | n
 }
 
 const inputCls =
-  "w-full rounded-xl border border-line bg-surface px-4 text-[15px] placeholder:text-muted focus:border-brand focus:outline-none";
+  "w-full rounded-2xl border border-line bg-surface px-4 text-[15px] placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10";
+const card = "rounded-3xl bg-surface p-5 shadow-card ring-1 ring-black/[0.05] lg:p-6";
+
+function Step({ n, title, hint }: { n: number; title: string; hint?: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand text-sm font-bold text-white" aria-hidden>{n}</span>
+      <div>
+        <h2 className="font-display text-lg font-bold leading-7">{title}</h2>
+        {hint && <p className="text-sm text-muted">{hint}</p>}
+      </div>
+    </div>
+  );
+}
 
 export function AddReportForm() {
   const router = useRouter();
@@ -153,64 +166,72 @@ export function AddReportForm() {
 
   return (
     <div className="mx-auto max-w-5xl p-4 lg:p-8">
-      <h1 className="font-display text-2xl font-bold lg:text-3xl">Add a report</h1>
-      <p className="mt-1 text-muted">Tell the city what needs attention. You can follow its progress under My reports.</p>
+      <h1 className="font-display text-3xl font-bold tracking-tight lg:text-4xl">Add a report</h1>
+      <p className="mt-1.5 text-muted">Tell the city what needs attention. You can follow its progress under My reports.</p>
 
-      <form onSubmit={onSubmit} noValidate className="mt-6 grid gap-6 lg:grid-cols-2 lg:gap-x-10">
-        <fieldset className="lg:col-start-1 lg:row-start-1" data-invalid={!!show("category")}>
-          <legend className="text-sm font-semibold">Category</legend>
-          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Category">
-            {CATEGORIES.map(({ id, label, Icon, color }) => {
-              const on = category === id;
-              return (
-                <button
-                  key={id} type="button" role="radio" aria-checked={on} onClick={() => setCategory(id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
-                    on ? "border-transparent text-white" : "border-line bg-surface hover:bg-slate-50"
-                  }`}
-                  style={on ? { background: color } : undefined}
-                >
-                  <Icon size={16} aria-hidden style={on ? undefined : { color }} /> {label}
-                </button>
-              );
-            })}
+      <form onSubmit={onSubmit} noValidate className="mt-7 grid gap-5 lg:grid-cols-2 lg:gap-x-6">
+        {/* 1. What */}
+        <section className={`${card} space-y-5 lg:col-start-1 lg:row-start-1`} aria-label="What is the problem">
+          <Step n={1} title="What&rsquo;s the problem?" />
+          <fieldset data-invalid={!!show("category")}>
+            <legend className="text-sm font-semibold">Category</legend>
+            <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Category">
+              {CATEGORIES.map(({ id, label, Icon, color }) => {
+                const on = category === id;
+                return (
+                  <button
+                    key={id} type="button" role="radio" aria-checked={on} onClick={() => setCategory(id)}
+                    className={`inline-flex h-10 items-center gap-2 rounded-full pl-1.5 pr-3.5 text-sm font-semibold ring-1 transition-all ${
+                      on ? "text-white ring-transparent" : "bg-surface ring-black/[0.08] hover:-translate-y-px hover:shadow-card"
+                    }`}
+                    style={on ? { background: color } : undefined}
+                  >
+                    <span className="grid size-7 place-items-center rounded-full"
+                      style={on ? { background: "rgb(255 255 255 / 0.22)" } : { background: `color-mix(in srgb, ${color} 14%, white)`, color }}>
+                      <Icon size={15} aria-hidden />
+                    </span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {show("category") && <p role="alert" className="mt-1.5 text-sm text-rose-600">{show("category")}</p>}
+          </fieldset>
+
+          <div data-invalid={!!show("title")}>
+            <label htmlFor="title" className="text-sm font-semibold">Title</label>
+            <input
+              id="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140}
+              placeholder="For example: Deep pothole outside the church gate"
+              aria-invalid={!!show("title")} aria-describedby={show("title") ? "title-err" : undefined}
+              className={`${inputCls} mt-2 h-12`}
+            />
+            <div className="mt-1.5 flex justify-between text-sm">
+              <span id="title-err" role="alert" className="text-rose-600">{show("title")}</span>
+              <span className="text-muted">{title.length}/140</span>
+            </div>
           </div>
-          {show("category") && <p role="alert" className="mt-1.5 text-sm text-rose-600">{show("category")}</p>}
-        </fieldset>
 
-        <div className="lg:col-start-1 lg:row-start-2" data-invalid={!!show("title")}>
-          <label htmlFor="title" className="text-sm font-semibold">Title</label>
-          <input
-            id="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140}
-            placeholder="For example: Deep pothole outside the church gate"
-            aria-invalid={!!show("title")} aria-describedby={show("title") ? "title-err" : undefined}
-            className={`${inputCls} mt-2 h-12`}
-          />
-          <div className="mt-1.5 flex justify-between text-sm">
-            <span id="title-err" role="alert" className="text-rose-600">{show("title")}</span>
-            <span className="text-muted">{title.length}/140</span>
+          <div>
+            <label htmlFor="body" className="text-sm font-semibold">Details <span className="font-normal text-muted">(optional)</span></label>
+            <textarea
+              id="body" value={body} onChange={(e) => setBody(e.target.value)} maxLength={1000} rows={4}
+              placeholder="What is the problem, how long has it been there, and who does it affect?"
+              className={`${inputCls} mt-2 py-3 leading-relaxed`}
+            />
           </div>
-        </div>
+        </section>
 
-        <div className="lg:col-start-1 lg:row-start-3">
-          <label htmlFor="body" className="text-sm font-semibold">Details <span className="font-normal text-muted">(optional)</span></label>
-          <textarea
-            id="body" value={body} onChange={(e) => setBody(e.target.value)} maxLength={1000} rows={4}
-            placeholder="What is the problem, how long has it been there, and who does it affect?"
-            className={`${inputCls} mt-2 py-3 leading-relaxed`}
-          />
-        </div>
-
-        <section className="flex flex-col lg:col-start-2 lg:row-span-4 lg:row-start-1" aria-labelledby="loc-h" data-invalid={!!show("location")}>
-          <h2 id="loc-h" className="text-sm font-semibold">Location</h2>
-          <p className="mt-1 text-sm text-muted">Tap the map to drop a pin, then drag it to fine-tune.</p>
-          <div className="relative isolate mt-2 min-h-[300px] flex-1 overflow-hidden rounded-2xl border border-line">
+        {/* 2. Where */}
+        <section className={`${card} flex flex-col lg:col-start-2 lg:row-span-3 lg:row-start-1`} aria-label="Where is it" data-invalid={!!show("location")}>
+          <Step n={2} title="Where is it?" hint="Tap the map to drop a pin, then drag it to fine-tune." />
+          <div className="relative isolate mt-4 min-h-[300px] flex-1 overflow-hidden rounded-2xl ring-1 ring-black/[0.08]">
             <LocationPicker value={pos} onChange={pick} />
           </div>
           {show("location") && <p role="alert" className="mt-1.5 text-sm text-rose-600">{show("location")}</p>}
           <button
             type="button" onClick={useMyLocation} disabled={locating}
-            className="mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+            className="mt-3 inline-flex h-10 w-fit items-center gap-2 rounded-full bg-brand-tint px-4 text-sm font-semibold text-brand-deep transition-colors hover:bg-brand/15 disabled:opacity-60"
           >
             {locating ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <LocateFixed size={16} aria-hidden />}
             Use my location
@@ -227,11 +248,12 @@ export function AddReportForm() {
           </div>
         </section>
 
-        <section className="lg:col-start-1 lg:row-start-4" aria-labelledby="photos-h">
-          <h2 id="photos-h" className="text-sm font-semibold">Photos <span className="font-normal text-muted">(optional, up to {MAX_PHOTOS})</span></h2>
-          <ul className="mt-2 flex flex-wrap gap-3">
+        {/* 3. Photos */}
+        <section className={`${card} lg:col-start-1 lg:row-start-2`} aria-label="Photos">
+          <Step n={3} title="Add photos" hint={`Optional, up to ${MAX_PHOTOS}. They are shrunk before upload.`} />
+          <ul className="mt-4 flex flex-wrap gap-3">
             {photos.map((p, i) => (
-              <li key={p.id} className="relative size-24 overflow-hidden rounded-xl border border-line">
+              <li key={p.id} className="relative size-24 overflow-hidden rounded-2xl ring-1 ring-black/[0.08]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.url} alt={`Photo ${i + 1}`} className="size-full object-cover" />
                 <button type="button" onClick={() => removePhoto(p.id)} aria-label={`Remove photo ${i + 1}`}
@@ -242,7 +264,7 @@ export function AddReportForm() {
             ))}
             {photos.length < MAX_PHOTOS && (
               <li>
-                <label className="flex size-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 bg-surface text-xs text-muted hover:border-brand hover:text-brand-deep focus-within:border-brand">
+                <label className="flex size-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/60 text-xs font-medium text-muted transition-colors hover:border-brand hover:bg-brand-tint hover:text-brand-deep focus-within:border-brand">
                   <input type="file" accept="image/*" multiple className="sr-only" disabled={compressing}
                     onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
                   {compressing ? <Loader2 size={22} className="animate-spin" aria-hidden /> : <ImagePlus size={22} aria-hidden />}
@@ -254,16 +276,16 @@ export function AddReportForm() {
           {photoError && <p role="alert" className="mt-1.5 text-sm text-rose-600">{photoError}</p>}
         </section>
 
-        <div className="lg:col-start-1 lg:row-start-5">
+        <div className="lg:col-start-1 lg:row-start-3">
           {error && (
-            <p role="alert" className="mb-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <p role="alert" className="mb-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-100">
               {error.text}{" "}
               {error.signIn && <Link href="/login?next=/reports/new" className="font-semibold underline">Sign in</Link>}
             </p>
           )}
           <button
             type="submit" disabled={submitting || compressing}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-semibold text-white transition-colors hover:bg-brand-deep disabled:opacity-60"
+            className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-semibold text-white shadow-[0_12px_24px_-12px_rgb(27_133_0/0.8)] transition-colors hover:bg-brand-deep disabled:opacity-60"
           >
             {submitting && <Loader2 size={18} className="animate-spin" aria-hidden />}
             {submitting ? "Sending…" : "Submit report"}

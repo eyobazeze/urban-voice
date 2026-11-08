@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { TILE_OPTIONS, TILE_URL } from "@/lib/map-tiles";
 
 // A small, non-interactive map that shows where a report is.
 export default function MiniMap({ lat, lng, color }: { lat: number; lng: number; color: string }) {
@@ -12,10 +13,7 @@ export default function MiniMap({ lat, lng, color }: { lat: number; lng: number;
       zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
       boxZoom: false, keyboard: false, touchZoom: false,
     }).setView([lat, lng], 15);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(m);
+    L.tileLayer(TILE_URL, TILE_OPTIONS).addTo(m);
     L.marker([lat, lng], {
       interactive: false, keyboard: false,
       icon: L.divIcon({
