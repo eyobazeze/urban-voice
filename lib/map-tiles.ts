@@ -1,9 +1,9 @@
-// One map style for every map in the app: a light, minimal basemap that lets the pins stand out.
-// CARTO's free basemaps need the attribution below and are meant for non-commercial use.
-export const TILE_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+// One map style for every map in the app: OpenStreetMap's standard tiles. They need no API key.
+// The "uv-tiles" class (see globals.css) softens their colours so the pins stand out.
+// Please keep the attribution, and keep traffic modest: https://operations.osmfoundation.org/policies/tiles/
+export const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 export const TILE_OPTIONS = {
-  subdomains: "abcd",
-  maxZoom: 20,
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  maxZoom: 19,
+  className: "uv-tiles",
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 };
