@@ -73,3 +73,6 @@ body {
 .leaflet-bar a:hover { background: var(--color-brand-tint) !important; color: var(--color-brand-deep) !important; }
 .leaflet-control-attribution { font-size: 10px; background: rgb(255 255 255 / 0.78) !important; border-radius: 8px 0 0 0; }
 .leaflet-control-attribution a { color: var(--color-muted) !important; }
+
+/* Soften the standard OpenStreetMap colours so report pins stand out */
+.uv-tiles { filter: saturate(0.55) contrast(0.95) brightness(1.04); }
