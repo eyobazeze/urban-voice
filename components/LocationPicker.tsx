@@ -22,7 +22,7 @@ function makeMarker(m: L.Map, at: L.LatLngExpression, onMove: (p: LatLng) => voi
 }
 
 // Tap the map (or drag the pin) to say where the problem is.
-export default function LocationPicker({ value, onChange }: { value: LatLng | null; onChange: (p: LatLng) => void }) {
+export default function LocationPicker({ value, onChange, start = null }: { value: LatLng | null; onChange: (p: LatLng) => void; start?: { lat: number; lng: number } | null }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const marker = useRef<L.Marker | null>(null);
@@ -42,6 +42,12 @@ export default function LocationPicker({ value, onChange }: { value: LatLng | nu
     map.current = m;
     return () => { m.remove(); map.current = null; marker.current = null; };
   }, []);
+
+  // Open where the person is (once we know), as long as they haven't placed a pin yet
+  useEffect(() => {
+    const m = map.current;
+    if (m && start && !marker.current) m.setView([start.lat, start.lng], 15);
+  }, [start]);
 
   // Follow changes made from outside (e.g. "Use my location")
   useEffect(() => {

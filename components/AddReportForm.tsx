@@ -8,6 +8,7 @@ import type { CategoryId } from "@/lib/types";
 import { compressImage } from "@/lib/image";
 import { NotSignedInError, submitReport } from "@/lib/reports-api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { isOutsideCoverage, useNearby } from "@/lib/nearby";
 import LocationPicker from "./LocationPickerLoader";
 import type { LatLng } from "./LocationPicker";
 
@@ -45,6 +46,7 @@ function Step({ n, title, hint }: { n: number; title: string; hint?: string }) {
 
 export function AddReportForm() {
   const router = useRouter();
+  const { center: knownPosition } = useNearby();
   const [category, setCategory] = useState<CategoryId | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -226,9 +228,14 @@ export function AddReportForm() {
         <section className={`${card} flex flex-col lg:col-start-2 lg:row-span-3 lg:row-start-1`} aria-label="Where is it" data-invalid={!!show("location")}>
           <Step n={2} title="Where is it?" hint="Tap the map to drop a pin, then drag it to fine-tune." />
           <div className="relative isolate mt-4 min-h-[300px] flex-1 overflow-hidden rounded-2xl ring-1 ring-black/[0.08]">
-            <LocationPicker value={pos} onChange={pick} />
+            <LocationPicker value={pos} onChange={pick} start={knownPosition} />
           </div>
           {show("location") && <p role="alert" className="mt-1.5 text-sm text-rose-600">{show("location")}</p>}
+          {pos && isOutsideCoverage({ lat: pos[0], lng: pos[1] }) && (
+            <p role="status" className="mt-2 rounded-xl bg-sky-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-sky-900 ring-1 ring-sky-100">
+              This spot is outside Addis Ababa, the area UrbanVoice covers. You can still submit it, but it may not reach the right city team.
+            </p>
+          )}
           <button
             type="button" onClick={useMyLocation} disabled={locating}
             className="mt-3 inline-flex h-10 w-fit items-center gap-2 rounded-full bg-brand-tint px-4 text-sm font-semibold text-brand-deep transition-colors hover:bg-brand/15 disabled:opacity-60"

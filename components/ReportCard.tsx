@@ -7,6 +7,8 @@ import { categoryById } from "@/lib/categories";
 import { compact, timeAgo } from "@/lib/format";
 import { formatDistance } from "@/lib/geo";
 import { useEngagement } from "@/lib/engagement";
+import { isExample } from "@/lib/examples";
+import { ExampleTag } from "./ui/ExampleTag";
 import { StatusBadge } from "./ui/StatusBadge";
 import { TimeAgo } from "./ui/TimeAgo";
 import { QuickComment } from "./QuickComment";
@@ -40,7 +42,7 @@ export function ReportCard({
           <cat.Icon size={21} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold" style={{ color: cat.color }}>{cat.label}</p>
+          <p className="flex items-center gap-2 text-xs font-semibold" style={{ color: cat.color }}>{cat.label}{isExample(report) && <ExampleTag />}</p>
           <p className="truncate text-xs text-muted">{report.author.name} · <TimeAgo iso={report.createdAt} /></p>
         </div>
         <StatusBadge status={report.status} />

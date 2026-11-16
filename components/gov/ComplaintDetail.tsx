@@ -10,6 +10,8 @@ import { applyDemoStatus, useDemoStatus, useHydrated, useMergedReports } from "@
 import { areaOf, priorityOf } from "@/lib/analytics";
 import { assignReport, setStatus } from "@/lib/gov-api";
 import { Avatar } from "../ui/Avatar";
+import { ExampleTag } from "../ui/ExampleTag";
+import { isExample } from "@/lib/examples";
 import { StatusBadge } from "../ui/StatusBadge";
 import { TimeAgo } from "../ui/TimeAgo";
 import MiniMap from "../MiniMapLoader";
@@ -82,6 +84,7 @@ export function ComplaintDetail({ report: base, comments, history: serverHistory
                 </span>
                 <StatusBadge status={report.status} />
                 <PriorityPill priority={priorityOf(report, now)} />
+                {isExample(report) && <ExampleTag />}
               </div>
               <h1 className="mt-3 font-display text-2xl font-bold leading-tight lg:text-3xl">{report.title}</h1>
               <dl className="mt-5 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">

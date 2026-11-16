@@ -7,7 +7,8 @@ import { CategoryChips } from "./CategoryChips";
 import { ReportCard } from "./ReportCard";
 import { MapPreviewCard } from "./MapPreviewCard";
 import { NearbyBar } from "./NearbyBar";
-import { refreshLocationIfAllowed, setRadius, showWholeCity, useNearby, useNearbyReports } from "@/lib/nearby";
+import { refreshLocationIfAllowed, setRadius, showAllCity, useNearby, useNearbyReports } from "@/lib/nearby";
+import { NearMeButton } from "./NearMeButton";
 import { useMergedReports } from "@/lib/demo-store";
 
 export function HomeExplorer({ reports: serverReports, initialSelectedId = null }: { reports: Report[]; initialSelectedId?: string | null }) {
@@ -66,7 +67,7 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
               <p className="mt-1">Try looking a bit wider, or be the first to report something here.</p>
               <div className="mt-4 flex justify-center gap-2">
                 {prefs.radiusKm < 5 && <button onClick={() => setRadius(5)} className="h-9 rounded-full bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-deep">Look within 5 km</button>}
-                <button onClick={showWholeCity} className="h-9 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-slate-50">Show the whole city</button>
+                <button onClick={showAllCity} className="h-9 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-slate-50">Show the whole city</button>
               </div>
             </>
           ) : "No reports match. Try a different category or search term."}
@@ -95,7 +96,7 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
       {/* Desktop: feed column */}
       <section className="hidden min-h-0 flex-col border-r border-line bg-canvas lg:flex">
         <div className="space-y-3 p-4 pb-1">
-          <h1 className="font-display text-2xl font-bold">Around you</h1>
+          <h1 className="font-display text-2xl font-bold">{nearby.mode === "near" ? "Around you" : "Around the city"}</h1>
           <NearbyBar result={nearby} />
           {searchBar}
           <CategoryChips value={category} onChange={setCategory} />
@@ -105,7 +106,7 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
 
       {/* Map (full-bleed on mobile) */}
       <section className="absolute inset-0 isolate lg:relative" aria-label="Map">
-        <MapView reports={visible} selectedId={selected} onSelect={select} onBackgroundClick={deselect} me={center} radiusKm={nearby.mode === "near" ? prefs.radiusKm : 0} />
+        <MapView reports={visible} selectedId={selected} onSelect={select} onBackgroundClick={deselect} me={center} radiusKm={nearby.mode === "near" ? (nearby.widenedTo ?? prefs.radiusKm) : 0} />
         {preview && <MapPreviewCard report={preview} onClose={deselect} />}
       </section>
 
@@ -115,10 +116,8 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
         <div className="pointer-events-auto -mx-4"><CategoryChips value={category} onChange={setCategory} /></div>
       </div>
 
-      {/* Mobile: first-visit question floats above the sheet */}
-      {!prefs.chosen && (
-        <div className="absolute inset-x-3 bottom-[148px] z-[650] lg:hidden"><NearbyBar result={nearby} compact /></div>
-      )}
+      {/* Mobile: floating "near me" button above the collapsed sheet */}
+      {sheet === "peek" && <NearMeButton />}
 
       {/* Mobile: bottom sheet */}
       <section
@@ -134,12 +133,12 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
         >
           <span className="h-1.5 w-10 rounded-full bg-slate-300" aria-hidden />
           <span className="flex items-center gap-1 text-sm font-semibold">
-            {visible.length} {visible.length === 1 ? "report" : "reports"}{nearby.mode === "near" ? ` within ${prefs.radiusKm} km` : ""}
+            {visible.length} {visible.length === 1 ? "report" : "reports"}{nearby.mode === "near" ? ` within ${nearby.widenedTo ?? prefs.radiusKm} km` : ""}
             <ChevronUp size={16} aria-hidden className={`transition-transform ${sheet === "full" ? "rotate-180" : ""}`} />
           </span>
         </button>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {prefs.chosen && <div className="px-4 pt-1"><NearbyBar result={nearby} compact /></div>}
+          <div className="px-4 pt-1"><NearbyBar result={nearby} compact /></div>
           {feed}
         </div>
       </section>

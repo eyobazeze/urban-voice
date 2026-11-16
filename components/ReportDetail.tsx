@@ -14,6 +14,8 @@ import { StatusBadge } from "./ui/StatusBadge";
 import { TimeAgo } from "./ui/TimeAgo";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { ShareButton } from "./ShareButton";
+import { ExampleTag } from "./ui/ExampleTag";
+import { isExample } from "@/lib/examples";
 import MiniMap from "./MiniMapLoader";
 
 const NOTE: Record<ReportStatus, { mine: string; other: string }> = {
@@ -114,6 +116,7 @@ export function ReportDetail({ report: base, initialComments, history: serverHis
             </span>
             <StatusBadge status={report.status} />
             {report.mine && <span className="rounded-full bg-brand-tint px-2.5 py-1 font-medium text-brand-deep">Your report</span>}
+            {isExample(report) && <ExampleTag />}
           </div>
           <h1 className="mt-3 font-display text-2xl font-bold leading-tight lg:text-[32px]">{report.title}</h1>
           <div className="mt-4 flex items-center gap-3">

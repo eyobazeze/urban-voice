@@ -11,7 +11,7 @@ const COPY = {
     points: [
       { Icon: MapPin, text: "Drop a pin and report in under a minute" },
       { Icon: CheckCircle2, text: "Follow each report from submitted to resolved" },
-      { Icon: Route, text: "See what is happening within 2 km of you" },
+      { Icon: Route, text: "Browse the city, or switch to what is within 2 km of you" },
     ],
   },
   gov: {
