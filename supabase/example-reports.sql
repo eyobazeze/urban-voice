@@ -9,7 +9,7 @@
 
 do $$
 declare
-  example_email text := 'eyobazeze9@gmail.com';  
+  example_email text := 'yourname+examples@gmail.com';  -- <-- CHANGE THIS
   uid uuid;
   staff uuid;
 begin

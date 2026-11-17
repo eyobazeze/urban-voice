@@ -32,6 +32,11 @@ function toReport(r: FeedRow, userId?: string, likedIds?: Set<string>, names?: M
   };
 }
 
+// Who is asking. Staff names (who is assigned, who changed a status) are only sent to staff,
+// so they never reach a citizen's browser, even if the interface doesn't display them.
+export interface Viewer { staff?: boolean }
+const forViewer = <T extends Report>(r: T, v: Viewer): T => (v.staff ? r : { ...r, assignee: undefined, assigneeId: undefined });
+
 type Db = Awaited<ReturnType<typeof createClient>>;
 
 /** Names of the staff members who are assigned to reports. */
@@ -42,8 +47,8 @@ async function staffNames(supabase: Db, ids: (string | null)[]): Promise<Map<str
   return new Map((data ?? []).map((p: { id: string; full_name: string | null; handle: string | null }) => [p.id, p.full_name || p.handle || "Staff"]));
 }
 
-export async function getReports(): Promise<Report[]> {
-  if (!isSupabaseConfigured()) return getMockReports();
+export async function getReports(viewer: Viewer = {}): Promise<Report[]> {
+  if (!isSupabaseConfigured()) return getMockReports().map((r) => forViewer(r, viewer));
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const [feed, likes] = await Promise.all([
@@ -54,11 +59,14 @@ export async function getReports(): Promise<Report[]> {
   const likedIds = new Set((likes.data ?? []).map((l) => l.report_id));
   const rows = feed.data as FeedRow[];
   const names = await staffNames(supabase, rows.map((r) => r.assigned_to));
-  return rows.map((r) => toReport(r, auth.user?.id, likedIds, names));
+  return rows.map((r) => forViewer(toReport(r, auth.user?.id, likedIds, names), viewer));
 }
 
-export async function getReport(id: string): Promise<Report | null> {
-  if (!isSupabaseConfigured()) return getMockReports().find((r) => r.id === id) ?? null;
+export async function getReport(id: string, viewer: Viewer = {}): Promise<Report | null> {
+  if (!isSupabaseConfigured()) {
+    const found = getMockReports().find((r) => r.id === id);
+    return found ? forViewer(found, viewer) : null;
+  }
   if (!UUID.test(id)) return null;
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -72,7 +80,7 @@ export async function getReport(id: string): Promise<Report | null> {
   if (!feed.data) return null;
   const row = feed.data as FeedRow;
   const names = await staffNames(supabase, [row.assigned_to]);
-  return toReport(row, auth.user?.id, new Set(like.data ? [id] : []), names);
+  return forViewer(toReport(row, auth.user?.id, new Set(like.data ? [id] : []), names), viewer);
 }
 
 interface CommentRow {
@@ -107,7 +115,7 @@ interface HistoryRow {
 }
 
 /** The status changes staff have made to a report, oldest first. */
-export async function getHistory(reportId: string): Promise<HistoryEntry[]> {
+export async function getHistory(reportId: string, viewer: Viewer = {}): Promise<HistoryEntry[]> {
   if (!isSupabaseConfigured() || !UUID.test(reportId)) return []; // demo-mode history lives in the browser
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -118,6 +126,6 @@ export async function getHistory(reportId: string): Promise<HistoryEntry[]> {
   if (error) throw new Error("Couldn't load the updates");
   return (data as unknown as HistoryRow[]).map((h) => {
     const p = Array.isArray(h.profiles) ? h.profiles[0] : h.profiles;
-    return { id: String(h.id), status: h.to_status, note: h.note ?? undefined, by: p?.full_name ?? undefined, createdAt: h.created_at };
+    return { id: String(h.id), status: h.to_status, note: h.note ?? undefined, by: viewer.staff ? (p?.full_name ?? undefined) : undefined, createdAt: h.created_at };
   });
 }

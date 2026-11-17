@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Heart, MessageCircle, MapPin, ArrowRight } from "lucide-react";
 import type { Report } from "@/lib/types";
 import { categoryById } from "@/lib/categories";
-import { compact, timeAgo } from "@/lib/format";
+import { compact } from "@/lib/format";
 import { formatDistance } from "@/lib/geo";
 import { useEngagement } from "@/lib/engagement";
 import { isExample } from "@/lib/examples";
@@ -23,7 +23,6 @@ export function ReportCard({
   const { liked, likes, comments, toggleLike } = useEngagement(report);
   const [commenting, setCommenting] = useState(false);
   const photo = report.photoUrls?.[0];
-  void timeAgo;
 
   return (
     <article

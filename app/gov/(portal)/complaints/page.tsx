@@ -18,6 +18,6 @@ export default function ComplaintsPage({ searchParams }: PageProps<"/gov/complai
 async function Data({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await connection();
   const { area, status } = await searchParams;
-  const reports = await getReports();
+  const reports = await getReports({ staff: true });
   return <ComplaintsTable reports={reports} now={serverNow()} initialArea={typeof area === "string" ? area : "all"} initialStatus={typeof status === "string" ? status : "all"} />;
 }

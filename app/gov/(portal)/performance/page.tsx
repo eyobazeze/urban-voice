@@ -17,5 +17,5 @@ export default function Page() {
 
 async function Data() {
   await connection();
-  return <GovPerformance reports={await getReports()} now={serverNow()} />;
+  return <GovPerformance reports={await getReports({ staff: true })} now={serverNow()} />;
 }

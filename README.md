@@ -6,7 +6,7 @@
 
 **Live app:** [urban-voiceful.vercel.app](https://urban-voiceful.vercel.app/)
 
-Built by [@eyobazeze](https://github.com/eyobazeze). The whole stack runs on free tiers.
+Designed and built by [@eyobazeze](https://github.com/eyobazeze). The whole stack runs on free tiers.
 
 ---
 
@@ -84,7 +84,7 @@ Open <http://localhost:3000>. With no environment file the app starts in **demo 
    The variable keeps the name `ANON_KEY` even when you paste a publishable key. Restart `npm run dev` afterwards.
 4. **Authentication, URL Configuration:** set the Site URL to `http://localhost:3000` and add `http://localhost:3000/auth/callback` as a Redirect URL. Confirmation emails link back through that address.
 5. Sign up on the citizen site and confirm your email.
-6. Optional, for a live demo that isn't empty: sign up a second account (for example `you+examples@gmail.com`), put its email in `supabase/example-reports.sql`, and run that script in the SQL Editor. It adds eight sample reports with city updates, each clearly labelled **Example** in the app.
+6. Optional, for a live demo that isn't empty (a later step): sign up a second account (for example `you+examples@gmail.com`), put its email in `supabase/example-reports.sql`, and run that script in the SQL Editor. It adds eight sample reports with city updates, each clearly labelled **Example** in the app.
 
 Supabase's built-in email sender allows only a few messages per hour on the free plan. That is enough for testing; for a public launch, add an SMTP sender such as Resend.
 
@@ -129,7 +129,18 @@ proxy.ts         session refresh and route guards
 - Automated tests
 - Amharic translation
 
+## Known limitations
+
+Being upfront about what a free-tier portfolio project does not do:
+
+- **No rate limiting** on creating reports or comments beyond Supabase's own limits on sign-ups and emails.
+- **Profiles are publicly readable** (name, username, role and notification settings), which is what lets reports show who wrote them. A stricter design would expose only a public view.
+- **Reporters' names are public.** Anonymous reporting is on the roadmap.
+- **OpenStreetMap's tile servers** are free but meant for modest traffic. A busier deployment should use a keyed tile provider.
+- **No Content-Security-Policy header yet.** The other standard security headers are set in `next.config.ts`.
+- `supabase/hardening.sql` adds server-side limits (text length, photo size and type, and a guard on staff-only fields). Run it once on a live database.
+
 ## Credits
 
-- The interface started from the [Urban Feedback - Complaint Platform (Community)](https://www.figma.com/community/file/1539251016512130689) Figma Community file, then was adapted and extended, including all of the working behavior and the pages the design didn't cover.
+- Designed in Figma by [@eyobazeze](https://github.com/eyobazeze): the [Urban Feedback - Complaint Platform (Community)](https://www.figma.com/community/file/1539251016512130689) file. The app follows that design and extends it where the product needed more, for example the optional "Near me" view and the example-report labels.
 - Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.

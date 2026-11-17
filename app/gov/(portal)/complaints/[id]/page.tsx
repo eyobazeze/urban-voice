@@ -20,8 +20,8 @@ async function Data({ params }: { params: Promise<{ id: string }> }) {
   const access = await getStaffAccess();
   if (access.status !== "ok") return null;
   if (id.startsWith("demo-")) return <DemoComplaintDetail id={id} staff={access.staff} now={serverNow()} />;
-  const report = await getReport(id);
+  const report = await getReport(id, { staff: true });
   if (!report) notFound();
-  const [comments, history] = await Promise.all([getComments(id), getHistory(id)]);
+  const [comments, history] = await Promise.all([getComments(id), getHistory(id, { staff: true })]);
   return <ComplaintDetail report={report} comments={comments} history={history} staff={access.staff} now={serverNow()} />;
 }

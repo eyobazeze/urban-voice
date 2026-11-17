@@ -112,6 +112,7 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
 
       {/* Mobile: search + chips float over the map */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] space-y-2 p-4 pb-0 lg:hidden">
+        <h1 className="sr-only">Reports around the city</h1>
         <div className="pointer-events-auto">{searchBar}</div>
         <div className="pointer-events-auto -mx-4"><CategoryChips value={category} onChange={setCategory} /></div>
       </div>

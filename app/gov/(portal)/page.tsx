@@ -18,7 +18,7 @@ export default function DashboardPage() {
 
 async function Data() {
   await connection();
-  const [reports, access] = await Promise.all([getReports(), getStaffAccess()]);
+  const [reports, access] = await Promise.all([getReports({ staff: true }), getStaffAccess()]);
   if (access.status !== "ok") return null; // the layout has already redirected
   return <GovDashboard reports={reports} staff={access.staff} now={serverNow()} />;
 }
