@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Suspense fallback={<div className="hidden h-16 border-b border-line bg-surface lg:block" />}>
         <TopBar />
       </Suspense>
-      <main className="min-w-0 flex-1 pb-16 lg:pb-0">{children}</main>
+      <main className="min-w-0 flex-1 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:pb-0">{children}</main>
       <Suspense fallback={null}>
         <BottomNav />
       </Suspense>

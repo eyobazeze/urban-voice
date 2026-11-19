@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronUp } from "lucide-react";
 import type { CategoryId, Report } from "@/lib/types";
 import MapView from "./MapLoader";
@@ -21,6 +21,53 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(initialSelectedId);
   const [sheet, setSheet] = useState<"peek" | "half" | "full">(initialSelectedId ? "half" : "peek");
+
+  // Phones: the reports panel follows your finger and settles on the nearest stop (peek, half, full)
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [dragH, setDragH] = useState<number | null>(null);
+  const drag = useRef<{ startY: number; startH: number; max: number; moved: boolean; lastY: number; lastT: number; v: number } | null>(null);
+  const suppressClick = useRef(false);
+  const PEEK = 132;
+  const stops = () => {
+    const H = rootRef.current?.getBoundingClientRect().height ?? 700;
+    return { peek: PEEK, half: Math.round(H * 0.5), full: Math.round(H * 0.78) };
+  };
+  const onGripDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const s = stops();
+    drag.current = { startY: e.clientY, startH: s[sheet], max: s.full, moved: false, lastY: e.clientY, lastT: e.timeStamp, v: 0 };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onGripMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    const dy = d.startY - e.clientY; // positive = dragging up
+    if (!d.moved && Math.abs(dy) < 6) return; // still a tap
+    d.moved = true;
+    const dt = Math.max(1, e.timeStamp - d.lastT);
+    d.v = (d.lastY - e.clientY) / dt; // px per ms, positive = upward
+    d.lastY = e.clientY;
+    d.lastT = e.timeStamp;
+    setDragH(Math.min(d.max, Math.max(PEEK, d.startH + dy)));
+  };
+  const onGripUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d?.moved) return; // a plain tap: the click handler below toggles the panel
+    suppressClick.current = true;
+    setTimeout(() => { suppressClick.current = false; }, 60);
+    const s = stops();
+    const h = Math.min(d.max, Math.max(PEEK, d.startH + (d.startY - e.clientY)));
+    const list = [["peek", s.peek], ["half", s.half], ["full", s.full]] as const;
+    let target: "peek" | "half" | "full";
+    if (Math.abs(d.v) > 0.4) {
+      // A quick flick goes to the next stop in that direction
+      target = d.v > 0 ? (list.find(([, v]) => v > h + 8)?.[0] ?? "full") : ([...list].reverse().find(([, v]) => v < h - 8)?.[0] ?? "peek");
+    } else {
+      target = list.reduce((best, cur) => (Math.abs(cur[1] - h) < Math.abs(best[1] - h) ? cur : best))[0];
+    }
+    setSheet(target);
+    setDragH(null);
+  };
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -92,7 +139,7 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
   );
 
   return (
-    <div className="relative h-[calc(100dvh-4rem)] lg:grid lg:grid-cols-[clamp(480px,42vw,640px)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
+    <div ref={rootRef} className="relative h-[calc(100dvh-4rem-env(safe-area-inset-bottom,0px))] lg:h-[calc(100dvh-4rem)] lg:grid lg:grid-cols-[clamp(480px,42vw,640px)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
       {/* Desktop: feed column */}
       <section className="hidden min-h-0 flex-col border-r border-line bg-canvas lg:flex">
         <div className="space-y-3 p-4 pb-1">
@@ -118,19 +165,28 @@ export function HomeExplorer({ reports: serverReports, initialSelectedId = null 
       </div>
 
       {/* Mobile: floating "near me" button above the collapsed sheet */}
-      {sheet === "peek" && <NearMeButton />}
+      {sheet === "peek" && dragH === null && <NearMeButton />}
 
       {/* Mobile: bottom sheet */}
       <section
         aria-label="Nearby reports"
+        style={dragH !== null ? { height: dragH, transition: "none" } : undefined}
         className={`absolute inset-x-0 bottom-0 z-[600] flex flex-col rounded-t-3xl bg-canvas shadow-float transition-[height] duration-300 lg:hidden ${
           sheet === "full" ? "h-[78%]" : sheet === "half" ? "h-[50%]" : "h-[132px]"
         }`}
       >
         <button
-          onClick={() => setSheet((v) => (v === "full" ? "peek" : "full"))}
+          onClick={() => {
+            if (suppressClick.current) return; // this tap was the end of a drag
+            setSheet((v) => (v === "full" ? "peek" : "full"));
+          }}
+          onPointerDown={onGripDown}
+          onPointerMove={onGripMove}
+          onPointerUp={onGripUp}
+          onPointerCancel={() => { drag.current = null; setDragH(null); }}
           aria-expanded={sheet !== "peek"}
-          className="flex w-full flex-col items-center gap-1 pb-2 pt-2.5"
+          aria-label="Reports list. Drag up or down, or press, to open and close."
+          className="flex w-full cursor-grab touch-none select-none flex-col items-center gap-1 pb-2.5 pt-3 active:cursor-grabbing"
         >
           <span className="h-1.5 w-10 rounded-full bg-slate-300" aria-hidden />
           <span className="flex items-center gap-1 text-sm font-semibold">

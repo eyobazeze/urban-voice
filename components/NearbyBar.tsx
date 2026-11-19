@@ -2,25 +2,22 @@
 import { useState } from "react";
 import { Loader2, LocateFixed, MapPin, Globe2 } from "lucide-react";
 import type { Report } from "@/lib/types";
+import { TimeAgo } from "./ui/TimeAgo";
 import {
-  RADIUS_CHOICES, describeOutcome, isNearActive, locateAndApply, refreshLocationIfAllowed, resetRadius, setRadius, showAllCity, useNearby,
+  RADIUS_CHOICES, describeOutcome, isNearActive, locateAndApply, setRadius, showAllCity, useNearby,
   type NearbyResult,
 } from "@/lib/nearby";
 
 // Optional "near me" switch. The default is the whole city; this only filters when someone turns it on.
 export function NearbyBar({ result, compact = false }: { result: NearbyResult<Report>; compact?: boolean }) {
-  const { prefs, center } = useNearby();
+  const { prefs } = useNearby();
   const near = isNearActive(prefs) && result.mode === "near";
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "info" | "error"; text: string } | null>(null);
 
+  // Every tap asks the phone where it is right now, so "Near me" is never stuck on an old position
   const goNear = async () => {
     setMessage(null);
-    if (center) { // we already know where they are: switch on instantly, and refresh quietly
-      if (prefs.radiusKm === 0) resetRadius();
-      refreshLocationIfAllowed();
-      return;
-    }
     setBusy(true);
     setMessage(describeOutcome(await locateAndApply()));
     setBusy(false);
@@ -59,6 +56,11 @@ export function NearbyBar({ result, compact = false }: { result: NearbyResult<Re
             <button onClick={async () => setMessage(describeOutcome(await locateAndApply()))} aria-label="Update my location" title="Update my location"
               className="grid size-8 shrink-0 place-items-center rounded-full text-brand-deep hover:bg-white"><LocateFixed size={16} aria-hidden /></button>
           </div>
+          {prefs.at && (
+            <p className="mt-1 pl-6 text-[12px] text-brand-deep/70">
+              Location updated <TimeAgo iso={new Date(prefs.at).toISOString()} />
+            </p>
+          )}
           <div role="radiogroup" aria-label="How far to look" className="mt-2.5 grid grid-cols-3 rounded-full bg-white p-1 shadow-card">
             {RADIUS_CHOICES.map((km) => (
               <button key={km} role="radio" aria-checked={prefs.radiusKm === km} onClick={() => setRadius(km)}

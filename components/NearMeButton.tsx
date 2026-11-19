@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Loader2, LocateFixed } from "lucide-react";
-import { describeOutcome, isNearActive, locateAndApply, refreshLocationIfAllowed, resetRadius, showAllCity, useNearby } from "@/lib/nearby";
+import { describeOutcome, isNearActive, locateAndApply, showAllCity, useNearby } from "@/lib/nearby";
 
 // Phones: a floating locate button on the map, the familiar way to say "show me what's around here".
 export function NearMeButton() {
-  const { prefs, center } = useNearby();
+  const { prefs } = useNearby();
   const active = isNearActive(prefs);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -18,7 +18,6 @@ export function NearMeButton() {
   const press = async () => {
     setMessage(null);
     if (active) { showAllCity(); return; }
-    if (center) { resetRadius(); refreshLocationIfAllowed(); return; }
     setBusy(true);
     setMessage(describeOutcome(await locateAndApply())?.text ?? null);
     setBusy(false);

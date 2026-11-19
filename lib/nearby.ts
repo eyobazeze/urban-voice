@@ -16,6 +16,7 @@ export interface NearbyPrefs {
   radiusKm: number;        // 0 means the whole city
   chosen: boolean;         // they have answered the "use my location?" question
   autoWiden?: boolean;     // widen the search by itself when very little is close (default on)
+  at?: number;             // when the position was last updated (ms since 1970)
 }
 
 export const RADIUS_CHOICES = [1, 2, 5] as const;
@@ -45,19 +46,21 @@ export const isOutsideCoverage = (p: LatLng) => distanceKm(p, ADDIS) > COVERAGE_
 export const showAllCity = () => store.set({ ...store.getSnapshot(), radiusKm: 0, chosen: true });
 export const isNearActive = (p: NearbyPrefs) => p.lat !== undefined && p.lng !== undefined && p.radiusKm > 0;
 export const setLocation = (p: LatLng, source: "gps" | "city") =>
-  store.set({ ...store.getSnapshot(), lat: p.lat, lng: p.lng, source, chosen: true });
+  store.set({ ...store.getSnapshot(), lat: p.lat, lng: p.lng, source, chosen: true, at: Date.now() });
 
 export type LocateOutcome = "near" | "outside" | LocateError;
 export type LocateError = "denied" | "unavailable" | "timeout";
 
 /** Asks the browser where the person is. Must be called from a click so the permission prompt is expected. */
-export function locate(): Promise<LatLng> {
+export function locate(opts: { fresh?: boolean } = {}): Promise<LatLng> {
   return new Promise((resolve, reject) => {
     if (!("geolocation" in navigator)) { reject("unavailable" satisfies LocateError); return; }
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => reject((err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable") satisfies LocateError),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+      // Phones answer much faster with an approximate fix, which is plenty for a 1 to 5 km radius.
+      // "fresh" never accepts an old cached position: used whenever the person taps "Near me".
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: opts.fresh ? 0 : 60_000 },
     );
   });
 }
@@ -65,10 +68,10 @@ export function locate(): Promise<LatLng> {
 /** Finds the person and switches "near me" on. Returns what happened so the caller can explain it. */
 export async function locateAndApply(): Promise<LocateOutcome> {
   try {
-    const p = await locate();
+    const p = await locate({ fresh: true });
     if (isOutsideCoverage(p)) { showAllCity(); return "outside"; } // not in Addis Ababa: keep showing the city, don't keep their position
     const cur = store.getSnapshot();
-    store.set({ ...cur, lat: p.lat, lng: p.lng, source: "gps", chosen: true, radiusKm: cur.radiusKm > 0 ? cur.radiusKm : DEFAULT_RADIUS_KM });
+    store.set({ ...cur, lat: p.lat, lng: p.lng, source: "gps", chosen: true, at: Date.now(), radiusKm: cur.radiusKm > 0 ? cur.radiusKm : DEFAULT_RADIUS_KM });
     return "near";
   } catch (e) {
     return (e as LocateError) ?? "unavailable";
@@ -93,7 +96,9 @@ export function refreshLocationIfAllowed() {
   navigator.permissions.query({ name: "geolocation" }).then((status) => {
     if (status.state === "granted") locate().then((p) => {
       const cur = store.getSnapshot();
-      if (cur.source === "gps") store.set({ ...cur, lat: p.lat, lng: p.lng });
+      if (cur.source !== "gps") return;
+      if (isOutsideCoverage(p)) showAllCity();
+      else store.set({ ...cur, lat: p.lat, lng: p.lng, at: Date.now() });
     }).catch(() => {});
   }).catch(() => {});
 }
