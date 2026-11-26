@@ -6,7 +6,7 @@
 
 **Live app:** [urban-voiceful.vercel.app](https://urban-voiceful.vercel.app/)
 
-Designed and built by [@eyobazeze](https://github.com/eyobazeze). The whole stack runs on free tiers.
+Designed and built by [@eyobazeze](https://www.figma.com/community/file/1539251016512130689). The whole stack runs on free tiers.
 https://figma.com/@eyobazeze
 ---
 
