@@ -142,5 +142,5 @@ Being upfront about what a free-tier portfolio project does not do:
 
 ## Credits
 
-- Designed in Figma by [@eyobazeze](https://github.com/eyobazeze): the [Urban Feedback - Complaint Platform (Community)](https://www.figma.com/community/file/1539251016512130689) file. The app follows that design and extends it where the product needed more, for example the optional "Near me" view and the example-report labels.
+- Designed in Figma by [@eyobazeze](https://figma.com/@eyobazeze): the [Urban Feedback - Complaint Platform (Community)](https://www.figma.com/community/file/1539251016512130689) file. The app follows that design and extends it where the product needed more, for example the optional "Near me" view and the example-report labels.
 - Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
