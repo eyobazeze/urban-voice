@@ -1,6 +1,6 @@
 # UrbanVoice
 
-**A civic complaint platform where residents report problems on a map and follow the city's response, and staff triage and resolve them.**
+**A civic complaint platform where residents report problems on a map and follow the city's response, and staff track and resolve them.**
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8) ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ecf8e)
 
